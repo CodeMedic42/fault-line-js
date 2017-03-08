@@ -23,7 +23,7 @@ describe('fault-line-js Tests', () => {
             expect(outlet._writableState.objectMode).to.be.false();
             expect(outlet.name()).to.be.a('string');
             expect(outlet.isFaulted()).to.be.false();
-            expect(outlet._write).to.not.be.null();
+            expect(outlet._write).to.equal(Stream.Writable.prototype._write);
             expect(outlet._flush).to.not.exist();
         });
 
@@ -61,21 +61,6 @@ describe('fault-line-js Tests', () => {
             expect(outlet.isFaulted()).to.be.false();
             expect(outlet._write).to.equal(writer);
             expect(outlet._flush).to.not.exist();
-        });
-
-        it('Just writer and flush', () => {
-            const writer = () => {};
-            const flush = () => {};
-
-            const outlet = Outlet(writer, flush);
-
-            expect(outlet).to.be.instanceof(Stream);
-            expect(outlet.writable).to.be.true();
-            expect(outlet._writableState.objectMode).to.be.false();
-            expect(outlet.name()).to.be.a('string');
-            expect(outlet.isFaulted()).to.be.false();
-            expect(outlet._write).to.equal(writer);
-            expect(outlet._flush).to.equal(flush);
         });
 
         it('name is set', () => {
@@ -164,188 +149,6 @@ describe('fault-line-js Tests', () => {
 
             expect(errorEmited, 'Expected error to have been emitted').to.be.false();
             expect(faultEmited, 'Expected fault to have been emitted').to.be.true();
-        });
-
-        describe('call end', () => {
-            it('with _flush', (testDone) => {
-                let expected;
-                let writeCalled = 0;
-                let flushCalled = 0;
-
-                const write = (data, enc, next) => {
-                    writeCalled += 1;
-
-                    expect(data).to.equal(expected);
-
-                    next();
-                };
-
-                let millsBeforeFlush;
-                let millsAfterFlush;
-
-                const flush = (flushDone) => {
-                    flushCalled += 1;
-
-                    setTimeout(() => {
-                        millsAfterFlush = (new Date()).getMilliseconds();
-
-                        flushDone();
-                    }, 100);
-
-                    millsBeforeFlush = (new Date()).getMilliseconds();
-                };
-
-                const outlet = Outlet({
-                    objectMode: true
-                }, write, flush);
-
-                outlet.on('finish', () => {
-                    const finishFlush = (new Date()).getMilliseconds();
-
-                    expect(millsBeforeFlush, 'millsBefore less than millsAfter').to.be.lt(millsAfterFlush);
-                    expect(millsAfterFlush, 'millsAfter less than finish').to.be.lte(finishFlush);
-
-                    testDone();
-                });
-
-                expected = 'foo';
-                outlet.write('foo');
-
-                expected = 'bar';
-                outlet.write('bar');
-
-                expected = 'baz';
-                outlet.end('baz');
-
-                expect(writeCalled).to.equal(3);
-                expect(flushCalled).to.equal(1);
-            });
-
-            it('without _flush', (testDone) => {
-                let expected;
-                let writeCalled = 0;
-
-                const write = (data, enc, next) => {
-                    writeCalled += 1;
-
-                    expect(data).to.equal(expected);
-
-                    next();
-                };
-
-                const outlet = Outlet({
-                    objectMode: true
-                }, write);
-
-                outlet.on('finish', () => {
-                    testDone();
-                });
-
-                expected = 'foo';
-                outlet.write('foo');
-
-                expected = 'bar';
-                outlet.write('bar');
-
-                expected = 'baz';
-                outlet.end('baz');
-
-                expect(writeCalled).to.equal(3);
-            });
-
-            it('with _flush which throws an error', (testDone) => {
-                let expected;
-                let writeCalled = 0;
-
-                const write = (data, enc, next) => {
-                    writeCalled += 1;
-
-                    expect(data).to.equal(expected);
-
-                    next();
-                };
-
-                const expectedError = new Error();
-
-                const flush = () => {
-                    throw expectedError;
-                };
-
-                const outlet = Outlet({
-                    objectMode: true
-                }, write, flush);
-
-                outlet.on('finish', () => {
-                    expect.fail();
-                });
-
-                outlet.on('error', (err) => {
-                    expect(err).to.equal(expectedError);
-
-                    setTimeout(() => {
-                        // Give finish time to be called.
-                        testDone();
-                    }, 100);
-                });
-
-                expected = 'foo';
-                outlet.write('foo');
-
-                expected = 'bar';
-                outlet.write('bar');
-
-                expected = 'baz';
-                outlet.end('baz');
-
-                expect(writeCalled).to.equal(3);
-            });
-
-            it('with _flush which callsback an error', (testDone) => {
-                let expected;
-                let writeCalled = 0;
-
-                const write = (data, enc, next) => {
-                    writeCalled += 1;
-
-                    expect(data).to.equal(expected);
-
-                    next();
-                };
-
-                const expectedError = new Error();
-
-                const flush = (done) => {
-                    done(expectedError);
-                };
-
-                const outlet = Outlet({
-                    objectMode: true
-                }, write, flush);
-
-                outlet.on('finish', () => {
-                    expect.fail();
-                });
-
-                outlet.on('error', (err) => {
-                    expect(err).to.equal(expectedError);
-
-                    setTimeout(() => {
-                        // Give finish time to be called.
-                        testDone();
-                    }, 100);
-                });
-
-                expected = 'foo';
-                outlet.write('foo');
-
-                expected = 'bar';
-                outlet.write('bar');
-
-                expected = 'baz';
-                outlet.end('baz');
-
-                expect(writeCalled).to.equal(3);
-            });
         });
     });
 });

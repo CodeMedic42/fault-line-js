@@ -34,20 +34,10 @@ export default SingleSpace('fault-line-js.streams.pipe', () => {
 
         let options = null;
         let transform = null;
-        let flush = null;
 
-        if (args.length >= 3) {
+        if (args.length === 2) {
             options = args[0];
             transform = args[1];
-            flush = args[2];
-        } else if (args.length === 2) {
-            if (_isFunction(args[0])) {
-                transform = args[0];
-                flush = args[1];
-            } else {
-                options = args[0];
-                transform = args[1];
-            }
         } else if (args.length === 1) {
             if (_isFunction(args[0])) {
                 transform = args[0];
@@ -71,20 +61,8 @@ export default SingleSpace('fault-line-js.streams.pipe', () => {
             this._transform = transform;
         }
 
-        if (_isFunction(flush)) {
-            this._flush = flush;
-        }
-
         setupFaultComm.call(this);
     }
-
-    // Pipe.fromStream = function fromStream(stream) {
-    //     if ((stream instanceof Pipe) || (stream instanceof Pipeline)) {
-    //         Console.warn('Why are you trying to turn an existing pipe/pipeline into a pipe?');
-    //
-    //         return stream;
-    //     }
-    // }
 
     Util.inherits(Pipe, Stream.Transform);
 

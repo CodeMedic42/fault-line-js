@@ -7,9 +7,9 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "babel-node ./node_modules/mocha/bin/_mocha --recursive ./test/unit",
-    "test-debug": "babel-node --inspect --debug-brk ./node_modules/mocha/bin/_mocha --recursive ./test/unit",
-    "cover": "babel-node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- --recursive ./test/unit",
+    "test": "babel-node ./node_modules/mocha/bin/_mocha --recursive ./test",
+    "test-debug": "babel-node --inspect --debug-brk ./node_modules/mocha/bin/_mocha --recursive ./test",
+    "cover": "babel-node ./node_modules/istanbul/lib/cli.js cover ./node_modules/mocha/bin/_mocha -- --recursive ./test",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
     "lint": "eslint ./src",
     "clean": "rimraf ./lib",

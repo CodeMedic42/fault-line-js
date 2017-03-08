@@ -34,20 +34,10 @@ export default SingleSpace('fault-line-js.streams.outlet', () => {
 
         let options = null;
         let write = null;
-        let flush = null;
 
-        if (args.length >= 3) {
+        if (args.length === 2) {
             options = args[0];
             write = args[1];
-            flush = args[2];
-        } else if (args.length === 2) {
-            if (_isFunction(args[0])) {
-                write = args[0];
-                flush = args[1];
-            } else {
-                options = args[0];
-                write = args[1];
-            }
         } else if (args.length === 1) {
             if (_isFunction(args[0])) {
                 write = args[0];
@@ -72,33 +62,9 @@ export default SingleSpace('fault-line-js.streams.outlet', () => {
         if (_isFunction(write)) {
             this._write = write;
         }
-
-        if (_isFunction(flush)) {
-            this._flush = flush;
-        }
     }
 
     Util.inherits(Outlet, Stream.Writable);
-
-    Outlet.prototype.end = function end(...args) {
-        if (_isNil(this._flush)) {
-            Stream.Writable.prototype.end.call(this, ...args);
-        } else {
-            try {
-                this.write(...args);
-
-                this._flush((err) => {
-                    if (err) {
-                        EventEmitter.prototype.emit.call(this, 'error', err);
-                    } else {
-                        Stream.Writable.prototype.end.call(this, ...args);
-                    }
-                });
-            } catch (err) {
-                EventEmitter.prototype.emit.call(this, 'error', err);
-            }
-        }
-    };
 
     Outlet.prototype.emit = function emit(event, ...args) {
         if (event !== 'fault') {

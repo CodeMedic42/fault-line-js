@@ -8,6 +8,7 @@ import Symbol from 'es6-symbol';
 import SingleSpace from 'single-space';
 import _isNil from 'lodash/isNil';
 import _isArray from 'lodash/isArray';
+import _merge from 'lodash/merge';
 
 import Pipe from './pipe';
 
@@ -38,27 +39,10 @@ export default SingleSpace('fault-line-js.streams.pipeline', () => {
         });
     }
 
-    function Pipeline(pipes, options) {
-        if (!(this instanceof Pipeline)) {
-            return new Pipeline(pipes, options);
-        }
-
+    function setupPipes(pipes) {
         if (!_isArray(pipes) || pipes.length <= 0) {
-            throw new Error('Only an array withy at least one item is valid.');
+            throw new Error('Only an array with at least one item is valid.');
         }
-
-        const _options = _isNil(options) ? {} : options;
-
-        this[privateSym] = {
-            name: _isNil(_options.name) ? uuid.v4() : _options.name,
-            options: _options,
-            isFaulted: false,
-            reemitErrorsAsFaults: _isNil(_options.reemitErrorsAsFaults) ? true : _options.reemitErrorsAsFaults
-        };
-
-        Stream.Duplex.call(this, {
-            objectMode: true
-        });
 
         let previous = this[privateSym].inlet = pipes[0];
 
@@ -75,15 +59,17 @@ export default SingleSpace('fault-line-js.streams.pipeline', () => {
         }
 
         this[privateSym].outlet = previous;
+    }
 
-        setupFaultComm.call(this, _options);
+    function setupComm() {
+        setupFaultComm.call(this);
 
         this.on('finish', () => {
             this[privateSym].inlet.end();
         });
 
-        this[privateSym].outlet.on('data', (chunk) => {
-            this.push(chunk);
+        this[privateSym].outlet.on('data', (chunk, enc) => {
+            this.push(chunk, enc);
         }).on('end', () => {
             this.push(null);
         }).on('fault', (...args) => {
@@ -91,6 +77,30 @@ export default SingleSpace('fault-line-js.streams.pipeline', () => {
 
             EventEmitter.prototype.emit.call(this, 'fault', ...args);
         });
+    }
+
+    function Pipeline(pipes, options) {
+        if (!(this instanceof Pipeline)) {
+            return new Pipeline(pipes, options);
+        }
+
+        const _options = _merge({}, options);
+
+        this[privateSym] = {
+            name: _isNil(_options.name) ? uuid.v4() : _options.name,
+            isFaulted: false,
+            reemitErrorsAsFaults: _isNil(_options.reemitErrorsAsFaults) ? true : _options.reemitErrorsAsFaults
+        };
+
+        setupPipes.call(this, pipes);
+
+        delete _options.objectMode;
+        _options.readableObjectMode = this[privateSym].inlet._readableState.objectMode;
+        _options.writableObjectMode = this[privateSym].outlet._writableState.objectMode;
+
+        Stream.Duplex.call(this, _options);
+
+        setupComm.call(this);
     }
 
     util.inherits(Pipeline, Stream.Duplex);

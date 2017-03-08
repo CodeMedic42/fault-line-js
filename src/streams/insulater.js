@@ -49,9 +49,9 @@ export default SingleSpace('fault-line-js.streams.insulater', () => {
             insulatee
         };
 
-        if (_isFunction(insulatee.init)) {
+        if (_isFunction(insulatee.start)) {
             processItem.call(this, () => {
-                return insulatee.init();
+                return insulatee.start();
             });
         }
     }
@@ -68,24 +68,26 @@ export default SingleSpace('fault-line-js.streams.insulater', () => {
     };
 
     Insulater.prototype._flush = function _flush(done) {
-        if (!_isFunction(this[privateSym].insulatee.finish)) {
-            done();
+        let finalPromise;
 
-            return;
+        if (!_isFunction(this[privateSym].insulatee.finish)) {
+            finalPromise = Promise.all(this[privateSym].promises);
+        } else {
+            finalPromise = Promise.try(() => {
+                // Execute Finish
+                const result = this[privateSym].insulatee.finish();
+
+                // But wait for the rest of the promisies to complete.
+                // It is possible the other promisses were waiting for finish to be called so that they can complete.
+                // This is why we execute finish outside of the the Promise.all call.
+                return Promise.all(this[privateSym].promises).then(() => {
+                    // Ok handle the result of finish.
+                    return pushValue.call(this, result);
+                });
+            });
         }
 
-        Promise.try(() => {
-            // Execute Finish
-            const result = this[privateSym].insulatee.finish();
-
-            // But wait for the rest of the promisies to complete.
-            // It is possible the other promisses were waiting for finish to be called so that they can complete.
-            // This is why we execute finish outside of the the Promise.all call.
-            return Promise.all(this[privateSym].promises).then(() => {
-                // Ok handle the result of finish.
-                return pushValue.call(this, result);
-            });
-        }).catch((err) => {
+        finalPromise.catch((err) => {
             this.emit('error', err);
         }).finally(() => {
             done();
