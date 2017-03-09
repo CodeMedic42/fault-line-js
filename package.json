@@ -1,6 +1,6 @@
 {
   "name": "fault-line-js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A module which has streaming object which can comunicate with each other.",
   "main": "lib/index.js",
   "directories": {
