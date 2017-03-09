@@ -131,7 +131,7 @@ describe('fault-line-js Tests', () => {
 
         it('throw error; do not get fault', () => {
             const pipe = Pipe({
-                reemitErrorsAsFaults: false
+                reemitErrorsAsFaults: 'off'
             });
 
             let errorEmited = false;
@@ -178,6 +178,33 @@ describe('fault-line-js Tests', () => {
 
             expect(errorEmited, 'Expected error to have been emitted').to.be.false();
             expect(faultEmited, 'Expected fault to have been emitted').to.be.true();
+        });
+
+        it('throw error; get fault only', () => {
+            const pipe = Pipe({
+                reemitErrorsAsFaults: 'faultOnly'
+            });
+
+            let errorEmited = false;
+            let faultEmited = false;
+
+            pipe.on('error', () => {
+                errorEmited = true;
+            });
+
+            pipe.on('fault', (...args) => {
+                faultEmited = true;
+
+                expect(args[0]).to.equal('A');
+                expect(args[1]).to.equal('B');
+                expect(args[2]).to.equal('C');
+                expect(args[3]).to.equal(pipe);
+            });
+
+            pipe.emit('error', 'A', 'B', 'C');
+
+            expect(errorEmited, 'Error should not have been emitted').to.be.false();
+            expect(faultEmited, 'Fault should have been emitted').to.be.true();
         });
     });
 });

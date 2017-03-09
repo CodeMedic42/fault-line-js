@@ -4,7 +4,7 @@
   "description": "A module which has streaming object which can comunicate with each other.",
   "main": "lib/index.js",
   "directories": {
-    "test": "tests"
+    "lib": "lib"
   },
   "scripts": {
     "test": "babel-node ./node_modules/mocha/bin/_mocha --recursive ./test",
@@ -18,14 +18,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CodeMedic42/fault-line.git"
+    "url": "git+https://github.com/CodeMedic42/fault-line-js.git"
   },
   "author": "CodeMedic42",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/CodeMedic42/fault-line/issues"
+    "url": "https://github.com/CodeMedic42/fault-line-js/issues"
   },
-  "homepage": "https://github.com/CodeMedic42/fault-line#readme",
+  "homepage": "https://github.com/CodeMedic42/fault-line-js#readme",
   "devDependencies": {
     "babel-cli": "^6.23.0",
     "babel-eslint": "^7.1.1",
@@ -51,5 +51,8 @@
     "lodash": "^4.17.4",
     "single-space": "^1.0.0",
     "uuid": "^3.0.1"
-  }
+  },
+  "keywords": [
+    "stream", "event", "error"
+  ]
 }
